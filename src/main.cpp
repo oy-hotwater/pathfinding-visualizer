@@ -1,15 +1,15 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <exception>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <queue>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 struct Pos {
@@ -85,6 +85,7 @@ public:
 
     const Pos& start() const { return start_; }
     const Pos& goal() const { return goal_; }
+
     int rows() const { return static_cast<int>(grid_.size()); }
     int cols() const { return static_cast<int>(grid_[0].size()); }
 
@@ -115,7 +116,6 @@ public:
                 view[p.r][p.c] = '*';
             }
         }
-
         for (const auto& row : view) {
             std::cout << row << '\n';
         }
@@ -127,7 +127,11 @@ private:
     Pos goal_{};
 };
 
-std::vector<Pos> reconstruct_path(const std::unordered_map<Pos, Pos, PosHash>& parent, Pos start, Pos goal) {
+std::vector<Pos> reconstruct_path(
+    const std::unordered_map<Pos, Pos, PosHash>& parent,
+    Pos start,
+    Pos goal
+) {
     std::vector<Pos> path;
     if (parent.find(goal) == parent.end() && !(goal == start)) {
         return path;
@@ -152,7 +156,6 @@ SearchResult run_bfs(const GridMap& map) {
 
     q.push(map.start());
     visited[map.start()] = true;
-
     int visited_nodes = 0;
 
     while (!q.empty()) {
@@ -200,7 +203,6 @@ SearchResult run_dijkstra(const GridMap& map) {
 
     dist[map.start()] = 0;
     pq.push({0, map.start()});
-
     int visited_nodes = 0;
 
     while (!pq.empty()) {
@@ -249,7 +251,9 @@ SearchResult run_astar(const GridMap& map) {
         int g;
         Pos pos;
         bool operator>(const Node& other) const {
-            if (f != other.f) return f > other.f;
+            if (f != other.f) {
+                return f > other.f;
+            }
             return g > other.g;
         }
     };
@@ -260,7 +264,6 @@ SearchResult run_astar(const GridMap& map) {
 
     g_score[map.start()] = 0;
     pq.push({manhattan(map.start(), map.goal()), 0, map.start()});
-
     int visited_nodes = 0;
 
     while (!pq.empty()) {
@@ -298,9 +301,77 @@ SearchResult run_astar(const GridMap& map) {
     return {false, {}, visited_nodes, std::chrono::duration<double, std::milli>(t1 - t0).count()};
 }
 
+void print_table_header() {
+    std::cout << std::left
+              << std::setw(12) << "Algorithm"
+              << std::setw(12) << "Found"
+              << std::setw(16) << "Visited Nodes"
+              << std::setw(14) << "Path Length"
+              << std::setw(14) << "Time (ms)"
+              << '\n';
+    std::cout << std::string(68, '-') << '\n';
+}
+
+void print_table_row(const std::string& name, const SearchResult& result) {
+    std::cout << std::left
+              << std::setw(12) << name
+              << std::setw(12) << (result.found ? "yes" : "no")
+              << std::setw(16) << result.visited_nodes
+              << std::setw(14) << (result.found ? static_cast<int>(result.path.size()) - 1 : -1)
+              << std::setw(14) << std::fixed << std::setprecision(3) << result.elapsed_ms
+              << '\n';
+}
+
+void run_compare_mode(const GridMap& map) {
+    const auto bfs = run_bfs(map);
+    const auto dijkstra = run_dijkstra(map);
+    const auto astar = run_astar(map);
+
+    print_table_header();
+    print_table_row("bfs", bfs);
+    print_table_row("dijkstra", dijkstra);
+    print_table_row("astar", astar);
+    std::cout << '\n';
+
+    const SearchResult* best = &bfs;
+    std::string best_name = "bfs";
+    if (dijkstra.elapsed_ms < best->elapsed_ms) {
+        best = &dijkstra;
+        best_name = "dijkstra";
+    }
+    if (astar.elapsed_ms < best->elapsed_ms) {
+        best = &astar;
+        best_name = "astar";
+    }
+
+    std::cout << "Fastest on this run: " << best_name << "\n\n";
+
+    if (best->found) {
+        std::cout << "Path preview (fastest result):\n";
+        map.print_with_path(best->path);
+    } else {
+        std::cout << "No path found by any algorithm.\n";
+    }
+}
+
+void print_single_result(const GridMap& map, const std::string& algorithm, const SearchResult& result) {
+    std::cout << "Algorithm : " << algorithm << "\n";
+    std::cout << "Path found : " << (result.found ? "yes" : "no") << "\n";
+    std::cout << "Visited nodes : " << result.visited_nodes << "\n";
+    std::cout << "Path length : " << (result.found ? static_cast<int>(result.path.size()) - 1 : -1) << "\n";
+    std::cout << std::fixed << std::setprecision(3);
+    std::cout << "Elapsed time : " << result.elapsed_ms << " ms\n\n";
+
+    if (result.found) {
+        map.print_with_path(result.path);
+    } else {
+        std::cout << "No path found.\n";
+    }
+}
+
 void print_usage(const char* app_name) {
-    std::cout << "Usage: " << app_name << " <map-file> <algorithm>\n"
-              << "  algorithm: bfs | dijkstra | astar\n";
+    std::cout << "Usage: " << app_name << " <map_file> <algorithm>\n"
+              << "algorithm: bfs | dijkstra | astar | compare\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -314,8 +385,13 @@ int main(int argc, char* argv[]) {
         const std::string algorithm = argv[2];
 
         GridMap map(map_file);
-        SearchResult result;
 
+        if (algorithm == "compare") {
+            run_compare_mode(map);
+            return 0;
+        }
+
+        SearchResult result;
         if (algorithm == "bfs") {
             result = run_bfs(map);
         } else if (algorithm == "dijkstra") {
@@ -327,19 +403,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        std::cout << "Algorithm     : " << algorithm << "\n";
-        std::cout << "Path found    : " << (result.found ? "yes" : "no") << "\n";
-        std::cout << "Visited nodes : " << result.visited_nodes << "\n";
-        std::cout << "Path length   : " << (result.found ? static_cast<int>(result.path.size()) - 1 : -1) << "\n";
-        std::cout << std::fixed << std::setprecision(3);
-        std::cout << "Elapsed time  : " << result.elapsed_ms << " ms\n\n";
-
-        if (result.found) {
-            map.print_with_path(result.path);
-        } else {
-            std::cout << "No path found.\n";
-        }
-
+        print_single_result(map, algorithm, result);
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

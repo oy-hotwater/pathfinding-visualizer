@@ -19,6 +19,7 @@
 - BFS
 - Dijkstra
 - A\*
+- compare（3手法をまとめて比較）
 
 ## マップ記号
 
@@ -52,9 +53,7 @@ cmake --build build
 ### 実行例
 
 ```bash
-./build/pathfinding_visualizer data/sample_map.txt bfs
-./build/pathfinding_visualizer data/sample_map.txt dijkstra
-./build/pathfinding_visualizer data/sample_map.txt astar
+./build/pathfinding_visualizer data/sample_map.txt compare
 ```
 
 ## Docker 実行
@@ -68,9 +67,7 @@ docker build -t pathfinding-visualizer .
 ### 実行例
 
 ```bash
-docker run --rm pathfinding-visualizer data/sample_map.txt bfs
-docker run --rm pathfinding-visualizer data/sample_map.txt dijkstra
-docker run --rm pathfinding-visualizer data/sample_map.txt astar
+docker run --rm pathfinding-visualizer /app/data/sample_map.txt compare
 ```
 
 ## 出力内容
