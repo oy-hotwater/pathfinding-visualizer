@@ -84,7 +84,6 @@ docker run --rm pathfinding-visualizer /app/data/sample_map.txt compare
 - 探索過程のアニメーション表示
 - 重み付きマップ対応
 - ランダム迷路生成
-- アルゴリズム比較モード
 - テスト追加
 
 ## C++ を選んだ理由
