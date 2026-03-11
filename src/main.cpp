@@ -245,7 +245,8 @@ SearchResult run_bfs(const GridMap& map, std::ostream* trace = nullptr) {
         if (cur == map.goal()) {
             auto path = reconstruct_path(parent, map.start(), map.goal());
             write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur));
-            write_trace_map(trace, "FINAL PATH", map.render_state(visited, frontier, nullptr, &path));
+            std::unordered_map<Pos, bool, PosHash> empty_marks;
+            write_trace_map(trace, "FINAL PATH", map.render_state(empty_marks, empty_marks, nullptr, &path));
 
             auto t1 = std::chrono::steady_clock::now();
             return {
@@ -342,7 +343,8 @@ SearchResult run_dijkstra(const GridMap& map, std::ostream* trace = nullptr) {
         if (cur.pos == map.goal()) {
             auto path = reconstruct_path(parent, map.start(), map.goal());
             write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur.pos));
-            write_trace_map(trace, "FINAL PATH", map.render_state(visited, frontier, nullptr, &path));
+            std::unordered_map<Pos, bool, PosHash> empty_marks;
+            write_trace_map(trace, "FINAL PATH", map.render_state(empty_marks, empty_marks, nullptr, &path));
 
             auto t1 = std::chrono::steady_clock::now();
             return {
@@ -451,7 +453,8 @@ SearchResult run_astar(const GridMap& map, std::ostream* trace = nullptr) {
         if (cur.pos == map.goal()) {
             auto path = reconstruct_path(parent, map.start(), map.goal());
             write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur.pos));
-            write_trace_map(trace, "FINAL PATH", map.render_state(visited, frontier, nullptr, &path));
+            std::unordered_map<Pos, bool, PosHash> empty_marks;
+            write_trace_map(trace, "FINAL PATH", map.render_state(empty_marks, empty_marks, nullptr, &path));
 
             auto t1 = std::chrono::steady_clock::now();
             return {
