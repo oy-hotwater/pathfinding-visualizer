@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <filesystem>
 
 struct Pos {
     int r;
@@ -33,6 +34,18 @@ struct SearchResult {
     int visited_nodes = 0;
     double elapsed_ms = 0.0;
 };
+
+// ログ出力用の関数（必要に応じて呼び出す）
+void write_trace_line(std::ostream* trace, const std::string& line) {
+    if (trace) {
+        (*trace) << line << '\n';
+    }
+}
+
+// ログ出力用の関数（必要に応じて呼び出す）
+std::string pos_to_string(const Pos& p) {
+    return "(" + std::to_string(p.r) + ", " + std::to_string(p.c) + ")";
+}
 
 class GridMap {
 public:
@@ -147,7 +160,7 @@ std::vector<Pos> reconstruct_path(
     return path;
 }
 
-SearchResult run_bfs(const GridMap& map) {
+SearchResult run_bfs(const GridMap& map, std::ostream* trace = nullptr) {
     auto t0 = std::chrono::steady_clock::now();
 
     std::queue<Pos> q;
@@ -158,13 +171,23 @@ SearchResult run_bfs(const GridMap& map) {
     visited[map.start()] = true;
     int visited_nodes = 0;
 
+    write_trace_line(trace, "[BFS] start = " + pos_to_string(map.start()));
+    write_trace_line(trace, "[BFS] goal  = " + pos_to_string(map.goal()));
+
     while (!q.empty()) {
         Pos cur = q.front();
         q.pop();
         ++visited_nodes;
 
+        write_trace_line(
+            trace,
+            "[POP ] current=" + pos_to_string(cur) +
+            " visited_nodes=" + std::to_string(visited_nodes)
+        );
+
         if (cur == map.goal()) {
             auto t1 = std::chrono::steady_clock::now();
+            write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur));
             return {
                 true,
                 reconstruct_path(parent, map.start(), map.goal()),
@@ -178,15 +201,22 @@ SearchResult run_bfs(const GridMap& map) {
                 visited[next] = true;
                 parent[next] = cur;
                 q.push(next);
+
+                write_trace_line(
+                    trace,
+                    "[PUSH] next=" + pos_to_string(next) +
+                    " parent=" + pos_to_string(cur)
+                );
             }
         }
     }
 
     auto t1 = std::chrono::steady_clock::now();
+    write_trace_line(trace, "[END ] no path found");
     return {false, {}, visited_nodes, std::chrono::duration<double, std::milli>(t1 - t0).count()};
 }
 
-SearchResult run_dijkstra(const GridMap& map) {
+SearchResult run_dijkstra(const GridMap& map, std::ostream* trace = nullptr) {
     auto t0 = std::chrono::steady_clock::now();
 
     struct Node {
@@ -205,18 +235,33 @@ SearchResult run_dijkstra(const GridMap& map) {
     pq.push({0, map.start()});
     int visited_nodes = 0;
 
+    write_trace_line(trace, "[Dijkstra] start = " + pos_to_string(map.start()));
+    write_trace_line(trace, "[Dijkstra] goal  = " + pos_to_string(map.goal()));
+
     while (!pq.empty()) {
         Node cur = pq.top();
         pq.pop();
 
         if (cur.cost > dist[cur.pos]) {
+            write_trace_line(
+                trace,
+                "[SKIP] current=" + pos_to_string(cur.pos) +
+                " popped_cost=" + std::to_string(cur.cost) +
+                " best_cost=" + std::to_string(dist[cur.pos])
+            );
             continue;
         }
 
         ++visited_nodes;
+        write_trace_line(
+            trace,
+            "[POP ] current=" + pos_to_string(cur.pos) +
+            " cost=" + std::to_string(cur.cost)
+        );
 
         if (cur.pos == map.goal()) {
             auto t1 = std::chrono::steady_clock::now();
+            write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur.pos));
             return {
                 true,
                 reconstruct_path(parent, map.start(), map.goal()),
@@ -231,11 +276,19 @@ SearchResult run_dijkstra(const GridMap& map) {
                 dist[next] = next_cost;
                 parent[next] = cur.pos;
                 pq.push({next_cost, next});
+
+                write_trace_line(
+                    trace,
+                    "[PUSH] next=" + pos_to_string(next) +
+                    " cost=" + std::to_string(next_cost) +
+                    " parent=" + pos_to_string(cur.pos)
+                );
             }
         }
     }
 
     auto t1 = std::chrono::steady_clock::now();
+    write_trace_line(trace, "[END ] no path found");
     return {false, {}, visited_nodes, std::chrono::duration<double, std::milli>(t1 - t0).count()};
 }
 
@@ -243,7 +296,7 @@ int manhattan(const Pos& a, const Pos& b) {
     return std::abs(a.r - b.r) + std::abs(a.c - b.c);
 }
 
-SearchResult run_astar(const GridMap& map) {
+SearchResult run_astar(const GridMap& map, std::ostream* trace = nullptr) {
     auto t0 = std::chrono::steady_clock::now();
 
     struct Node {
@@ -266,18 +319,35 @@ SearchResult run_astar(const GridMap& map) {
     pq.push({manhattan(map.start(), map.goal()), 0, map.start()});
     int visited_nodes = 0;
 
+    write_trace_line(trace, "[A*] start = " + pos_to_string(map.start()));
+    write_trace_line(trace, "[A*] goal  = " + pos_to_string(map.goal()));
+
     while (!pq.empty()) {
         Node cur = pq.top();
         pq.pop();
 
         if (cur.g > g_score[cur.pos]) {
+            write_trace_line(
+                trace,
+                "[SKIP] current=" + pos_to_string(cur.pos) +
+                " popped_g=" + std::to_string(cur.g) +
+                " best_g=" + std::to_string(g_score[cur.pos])
+            );
             continue;
         }
 
         ++visited_nodes;
+        write_trace_line(
+            trace,
+            "[POP ] current=" + pos_to_string(cur.pos) +
+            " g=" + std::to_string(cur.g) +
+            " h=" + std::to_string(manhattan(cur.pos, map.goal())) +
+            " f=" + std::to_string(cur.f)
+        );
 
         if (cur.pos == map.goal()) {
             auto t1 = std::chrono::steady_clock::now();
+            write_trace_line(trace, "[GOAL] reached " + pos_to_string(cur.pos));
             return {
                 true,
                 reconstruct_path(parent, map.start(), map.goal()),
@@ -293,11 +363,21 @@ SearchResult run_astar(const GridMap& map) {
                 parent[next] = cur.pos;
                 int f = tentative_g + manhattan(next, map.goal());
                 pq.push({f, tentative_g, next});
+
+                write_trace_line(
+                    trace,
+                    "[PUSH] next=" + pos_to_string(next) +
+                    " g=" + std::to_string(tentative_g) +
+                    " h=" + std::to_string(manhattan(next, map.goal())) +
+                    " f=" + std::to_string(f) +
+                    " parent=" + pos_to_string(cur.pos)
+                );
             }
         }
     }
 
     auto t1 = std::chrono::steady_clock::now();
+    write_trace_line(trace, "[END ] no path found");
     return {false, {}, visited_nodes, std::chrono::duration<double, std::milli>(t1 - t0).count()};
 }
 
@@ -323,9 +403,32 @@ void print_table_row(const std::string& name, const SearchResult& result) {
 }
 
 void run_compare_mode(const GridMap& map) {
-    const auto bfs = run_bfs(map);
-    const auto dijkstra = run_dijkstra(map);
-    const auto astar = run_astar(map);
+    std::filesystem::create_directories("logs");
+
+    const std::filesystem::path bfs_trace_path =
+        std::filesystem::absolute(std::filesystem::path("logs") / "bfs_trace.txt");
+    const std::filesystem::path dijkstra_trace_path =
+        std::filesystem::absolute(std::filesystem::path("logs") / "dijkstra_trace.txt");
+    const std::filesystem::path astar_trace_path =
+        std::filesystem::absolute(std::filesystem::path("logs") / "astar_trace.txt");
+
+    std::ofstream bfs_trace_file(bfs_trace_path);
+    std::ofstream dijkstra_trace_file(dijkstra_trace_path);
+    std::ofstream astar_trace_file(astar_trace_path);
+
+    if (!bfs_trace_file) {
+        throw std::runtime_error("Failed to open trace file: " + bfs_trace_path.string());
+    }
+    if (!dijkstra_trace_file) {
+        throw std::runtime_error("Failed to open trace file: " + dijkstra_trace_path.string());
+    }
+    if (!astar_trace_file) {
+        throw std::runtime_error("Failed to open trace file: " + astar_trace_path.string());
+    }
+
+    const auto bfs = run_bfs(map, &bfs_trace_file);
+    const auto dijkstra = run_dijkstra(map, &dijkstra_trace_file);
+    const auto astar = run_astar(map, &astar_trace_file);
 
     print_table_header();
     print_table_row("bfs", bfs);
@@ -352,6 +455,11 @@ void run_compare_mode(const GridMap& map) {
     } else {
         std::cout << "No path found by any algorithm.\n";
     }
+
+    std::cout << "\nTrace files:\n";
+    std::cout << "  bfs      : " << bfs_trace_path << '\n';
+    std::cout << "  dijkstra : " << dijkstra_trace_path << '\n';
+    std::cout << "  astar    : " << astar_trace_path << '\n';
 }
 
 void print_single_result(const GridMap& map, const std::string& algorithm, const SearchResult& result) {
@@ -392,18 +500,31 @@ int main(int argc, char* argv[]) {
         }
 
         SearchResult result;
+
+        std::filesystem::create_directories("logs");
+
+        const std::filesystem::path trace_path =
+            std::filesystem::absolute(std::filesystem::path("logs") / (algorithm + "_trace.txt"));
+
+        std::ofstream trace_file(trace_path);
+
+        if (!trace_file) {
+            throw std::runtime_error("Failed to open trace file: " + trace_path.string());
+        }
+
         if (algorithm == "bfs") {
-            result = run_bfs(map);
+            result = run_bfs(map, &trace_file);
         } else if (algorithm == "dijkstra") {
-            result = run_dijkstra(map);
+            result = run_dijkstra(map, &trace_file);
         } else if (algorithm == "astar") {
-            result = run_astar(map);
+            result = run_astar(map, &trace_file);
         } else {
             print_usage(argv[0]);
             return 1;
         }
 
         print_single_result(map, algorithm, result);
+        std::cout << "Trace file : " << trace_path << "\n";
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

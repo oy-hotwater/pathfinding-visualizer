@@ -1,0 +1,83 @@
+[Dijkstra] start = (0, 0)
+[Dijkstra] goal  = (7, 9)
+[POP ] current=(0, 0) cost=0
+[PUSH] next=(0, 1) cost=1 parent=(0, 0)
+[POP ] current=(0, 1) cost=1
+[PUSH] next=(0, 2) cost=2 parent=(0, 1)
+[POP ] current=(0, 2) cost=2
+[PUSH] next=(1, 2) cost=3 parent=(0, 2)
+[PUSH] next=(0, 3) cost=3 parent=(0, 2)
+[POP ] current=(1, 2) cost=3
+[PUSH] next=(2, 2) cost=4 parent=(1, 2)
+[POP ] current=(0, 3) cost=3
+[POP ] current=(2, 2) cost=4
+[PUSH] next=(3, 2) cost=5 parent=(2, 2)
+[PUSH] next=(2, 1) cost=5 parent=(2, 2)
+[POP ] current=(3, 2) cost=5
+[PUSH] next=(4, 2) cost=6 parent=(3, 2)
+[PUSH] next=(3, 3) cost=6 parent=(3, 2)
+[POP ] current=(2, 1) cost=5
+[PUSH] next=(2, 0) cost=6 parent=(2, 1)
+[POP ] current=(4, 2) cost=6
+[PUSH] next=(5, 2) cost=7 parent=(4, 2)
+[POP ] current=(3, 3) cost=6
+[PUSH] next=(3, 4) cost=7 parent=(3, 3)
+[POP ] current=(2, 0) cost=6
+[PUSH] next=(3, 0) cost=7 parent=(2, 0)
+[POP ] current=(5, 2) cost=7
+[PUSH] next=(5, 3) cost=8 parent=(5, 2)
+[POP ] current=(3, 4) cost=7
+[PUSH] next=(2, 4) cost=8 parent=(3, 4)
+[POP ] current=(3, 0) cost=7
+[PUSH] next=(4, 0) cost=8 parent=(3, 0)
+[POP ] current=(5, 3) cost=8
+[PUSH] next=(5, 4) cost=9 parent=(5, 3)
+[POP ] current=(2, 4) cost=8
+[PUSH] next=(1, 4) cost=9 parent=(2, 4)
+[POP ] current=(4, 0) cost=8
+[PUSH] next=(5, 0) cost=9 parent=(4, 0)
+[POP ] current=(5, 4) cost=9
+[PUSH] next=(5, 5) cost=10 parent=(5, 4)
+[POP ] current=(1, 4) cost=9
+[POP ] current=(5, 0) cost=9
+[PUSH] next=(6, 0) cost=10 parent=(5, 0)
+[POP ] current=(5, 5) cost=10
+[PUSH] next=(5, 6) cost=11 parent=(5, 5)
+[POP ] current=(6, 0) cost=10
+[PUSH] next=(7, 0) cost=11 parent=(6, 0)
+[POP ] current=(5, 6) cost=11
+[PUSH] next=(4, 6) cost=12 parent=(5, 6)
+[PUSH] next=(6, 6) cost=12 parent=(5, 6)
+[POP ] current=(7, 0) cost=11
+[PUSH] next=(7, 1) cost=12 parent=(7, 0)
+[POP ] current=(4, 6) cost=12
+[PUSH] next=(4, 7) cost=13 parent=(4, 6)
+[POP ] current=(6, 6) cost=12
+[PUSH] next=(7, 6) cost=13 parent=(6, 6)
+[POP ] current=(7, 1) cost=12
+[PUSH] next=(7, 2) cost=13 parent=(7, 1)
+[POP ] current=(4, 7) cost=13
+[PUSH] next=(4, 8) cost=14 parent=(4, 7)
+[POP ] current=(7, 6) cost=13
+[PUSH] next=(7, 7) cost=14 parent=(7, 6)
+[POP ] current=(7, 2) cost=13
+[PUSH] next=(7, 3) cost=14 parent=(7, 2)
+[POP ] current=(4, 8) cost=14
+[PUSH] next=(3, 8) cost=15 parent=(4, 8)
+[PUSH] next=(5, 8) cost=15 parent=(4, 8)
+[POP ] current=(7, 7) cost=14
+[PUSH] next=(7, 8) cost=15 parent=(7, 7)
+[POP ] current=(7, 3) cost=14
+[PUSH] next=(7, 4) cost=15 parent=(7, 3)
+[POP ] current=(3, 8) cost=15
+[PUSH] next=(2, 8) cost=16 parent=(3, 8)
+[POP ] current=(7, 8) cost=15
+[PUSH] next=(6, 8) cost=16 parent=(7, 8)
+[PUSH] next=(7, 9) cost=16 parent=(7, 8)
+[POP ] current=(7, 4) cost=15
+[POP ] current=(5, 8) cost=15
+[POP ] current=(2, 8) cost=16
+[PUSH] next=(2, 7) cost=17 parent=(2, 8)
+[POP ] current=(6, 8) cost=16
+[POP ] current=(7, 9) cost=16
+[GOAL] reached (7, 9)

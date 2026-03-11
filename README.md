@@ -66,8 +66,10 @@ docker build -t pathfinding-visualizer .
 
 ### 実行例
 
+- マウントすることでDocker内で消える出力を、ローカルに残す
+
 ```bash
-docker run --rm pathfinding-visualizer /app/data/sample_map.txt compare
+docker run --rm -v "${PWD}/logs:/app/logs" pathfinding-visualizer /app/data/sample_map.txt compare
 ```
 
 ## 出力内容
